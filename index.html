@@ -3,16 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>Aylaverse Tools</title>
-  <meta name="description" content="Aylaverse Tools – browser-based XML and developer utilities you can run directly in your browser." />
 
-<meta property="og:title" content="Aylaverse Tools" />
-<meta property="og:description" content="Edit XML files, load them from ZIP and build more browser-based tools under one hub." />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://aylaverse.github.io" />
+  <title>Aylaverse XML Editor</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="shared-header.css">
+
+  <!-- CodeMirror 5 (code editor) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css"
+  />
+
+  <!-- Fold gutter CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/fold/foldgutter.min.css"
+  />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
+
+  <!-- Fold addons -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/fold/brace-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/fold/xml-fold.min.js"></script>
+
+  <!-- JSZip (ZIP create + read) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -22,224 +41,1158 @@
 
     body {
       margin: 0;
-      padding: 24px;
+      padding: 20px;
       background: radial-gradient(circle at 0% 0%, #dbeafe 0, #e5e7eb 45%, #e5e7eb 100%);
       color: #0f172a;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+      overflow-x: hidden;
     }
 
     header {
-      max-width: 960px;
-      margin: 0 auto 24px auto;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-link:hover {
+  opacity: 0.9;
+}
+
+
+.editor-container {
+  align-self: flex-start; 
+}
+
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    /* header/logo styles moved to shared-header.css */
+   .logo-icon {
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-right: 8px;
+  user-select: none;
+}
 
 
     .logo-text-main {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: 700;
     }
 
     .logo-text-sub {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: #4b5563;
     }
 
-    main {
-      max-width: 960px;
+    .main-layout {
+      display: flex;
+      gap: 8px;
+      align-items: stretch; /* A seçeneği: sidebar ve editor alttan tam hizalı */
+      max-width: none;
       margin: 0 auto;
-      flex: 1;
+      height: calc(100vh - 170px); /* header + toolbar + padding düşülmüş yaklaşık yükseklik */
     }
+	header .logo-text-main {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
 
-    .section-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #111827;
-      margin-bottom: 10px;
-    }
+header .logo-text-sub {
+  opacity: 0.8;
+  font-size: 0.85rem;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-    }
 
-    .card {
-      border-radius: 16px;
-      padding: 18px 18px 16px;
+    .sidebar {
+      flex: 0 0 auto;
+      width: 240px;
+      min-width: 180px;
+      max-width: 480px;
       background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+      padding: 10px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      text-decoration: none;
-      color: inherit;
-      transition: transform 0.08s ease, box-shadow 0.08s ease;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      min-height: 150px;
+      height: 100%;
+      min-height: 100%; /* A seçeneği: editör paneliyle birebir hizalı */
     }
 
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
-    }
-
-    .card-header {
+    .divider {
+      flex: 0 0 auto;
+      width: 6px;
+      cursor: col-resize;
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
+      align-items: center;
+      justify-content: center;
     }
 
-    .card-title {
+    .divider::before {
+      content: "";
+      width: 2px;
+      height: 60%;
+      border-radius: 999px;
+      background: #cbd5e1;
+      transition: background 0.1s ease;
+    }
+
+    .divider:hover::before {
+      background: #94a3b8;
+    }
+
+    .sidebar-header {
+      font-size: 0.9rem;
       font-weight: 600;
-      font-size: 1rem;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .card-tag {
-      font-size: 0.72rem;
-      padding: 3px 8px;
+    .sidebar-header span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sidebar-header-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
       border-radius: 999px;
       background: #eef2ff;
       color: #4f46e5;
-      white-space: nowrap;
-      flex-shrink: 0;
     }
 
-    .card-desc {
-      font-size: 0.87rem;
-      color: #4b5563;
+    .file-tree {
+      flex: 1;
+      overflow-y: auto;
+      border-radius: 10px;
+      background: #f9fafb;
+      padding: 4px;
+      border: 1px solid #e5e7eb;
     }
+.file-item.selected {
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  color: white;
+  font-weight: 600;
+}
+.file-item {
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-item:hover::after {
+  content: attr(data-filename);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  background: #111827;
+  color: white;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transform: translateY(4px);
+  font-size: 0.75rem;
+  z-index: 1000;
+}
+.sidebar {
+  transition: width 0.2s ease;
+}
+.sidebar.collapsed {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
 
-    .card-footer {
-      margin-top: 6px;
-      display: flex;
-      justify-content: flex-end;
-      margin-top: auto; /* push footer to bottom so buttons align */
-    }
+/* collapsed modda tüm içeriği gizle, sadece dar sütun kalsın */
+.sidebar.collapsed .sidebar-header,
+.sidebar.collapsed .file-tree,
+.sidebar.collapsed .sidebar-actions {
+  display: none;
+}
 
-    .btn {
+    .file-pill {
       border-radius: 999px;
-      padding: 7px 14px;
-      border: none;
-      font-size: 0.85rem;
+      padding: 4px 10px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      color: #111827;
+      margin-bottom: 4px;
+      max-width: 100%;
+    }
+
+    .file-pill span {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #6366f1, #22d3ee);
-      color: #ffffff;
-      box-shadow: 0 8px 22px rgba(56, 189, 248, 0.25);
     }
 
-    .btn span {
+    .file-pill-icon {
+      font-size: 0.85rem;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+
+    .file-pill-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-pill:hover {
+      background: #e5e7eb;
+    }
+
+    .file-pill.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    .file-pill.active .file-pill-icon {
+      color: #e0f2fe;
+    }
+
+    .sidebar-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .sidebar-actions button {
+      flex: 1;
+      font-size: 0.78rem;
+      padding: 6px 8px;
+    }
+
+    .editor-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    
+      height: 100%;
+    }
+
+    #editorContainer {
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: #ffffff;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+    
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .CodeMirror {
+      height: 100%;
+      background: #ffffff;
       font-size: 0.9rem;
     }
 
-    .coming {
-      opacity: 0.6;
-      cursor: default;
+    .CodeMirror-gutters {
+      background: #f9fafb;
+      border-right: 1px solid #e5e7eb;
     }
 
-    .coming .btn {
-      background: #e5e7eb;
-      color: #6b7280;
+    .CodeMirror-linenumber {
+      color: #9ca3af;
+    }
+
+    #plainEditor {
+      width: 100%;
+      height: 65vh;
+      border: none;
+      padding: 10px;
+      resize: vertical;
+      outline: none;
+      background: #ffffff;
+      color: #111827;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular,
+        Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+        monospace;
+      font-size: 0.9rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar + .toolbar {
+      margin-top: 6px;
+    }
+
+    .toolbar-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar-section.grow {
+      flex: 1;
+    }
+
+    .toolbar input[type="text"] {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 0.9rem;
+      min-width: 260px;
+      width: 100%;
+    }
+
+    .toolbar input[type="text"]:focus {
+      outline: 2px solid #38bdf8;
+      outline-offset: 1px;
+      border-color: #38bdf8;
+    }
+
+    .file-input-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #4b5563;
+    }
+
+    .file-input-label span {
+      font-weight: 500;
+    }
+
+    .toolbar input[type="file"] {
+      font-size: 0.8rem;
+      color: #111827;
+    }
+
+	footer {
+  max-width: 1400px;      
+  margin: 24px auto 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-align: center;     
+}
+
+	
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 8px 22px rgba(56, 189, 248, 0.25);
+      transition: transform 0.08s ease,
+        box-shadow 0.08s ease,
+        opacity 0.1s ease;
+      white-space: nowrap;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: #0f172a;
+      box-shadow: none;
+      border: 1px solid #cbd5f5;
+    }
+
+    button.secondary:hover {
+      background: #e5edff;
       box-shadow: none;
     }
 
-    footer {
-      max-width: 960px;
-      margin: 24px auto 0;
-      font-size: 0.78rem;
-      color: #6b7280;
-      text-align: right;
+    button.danger {
+      background: #ef4444;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+      border: none;
+      color: #ffffff;
     }
 
-    @media (max-width: 640px) {
-      body {
-        padding: 16px;
+    button.danger:hover {
+      background: #dc2626;
+      box-shadow: 0 10px 24px rgba(239, 68, 68, 0.5);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(79, 70, 229, 0.35);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.5);
+      opacity: 0.9;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.02);
+      color: #4b5563;
+      min-width: 0;
+    }
+
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #9ca3af;
+      flex-shrink: 0;
+    }
+
+    .status-ok {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-ok::before {
+      background: #16a34a;
+    }
+
+    .status-error {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .status-error::before {
+      background: #dc2626;
+    }
+
+    @media (max-width: 900px) {
+      .main-layout {
+        flex-direction: column;
       }
 
-      .logo-text-main {
-        font-size: 1.3rem;
+      .sidebar {
+        width: 100%;
+        max-width: 100%;
+        order: 2;
+      }
+
+      .divider {
+        display: none;
+      }
+
+      .editor-panel {
+        order: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .toolbar-section {
+        width: 100%;
+      }
+
+      .toolbar-section.grow {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <div class="logo-icon">&lt;/&gt;</div>
-      <div>
-        <div class="logo-text-main">Aylaverse Tools</div>
-<div class="logo-text-sub">
-  Smart in-browser tools for developers & creators.
-</div>
+<header>
+  <a href="index.html" class="logo logo-link">
+    <div class="logo-icon">A</div>
+    <div>
+      <div class="logo-text-main">Aylaverse XML Editor</div>
+      <div class="logo-text-sub">
+        Create and manage multiple XML files right inside your browser — ZIP support included.
       </div>
     </div>
-  </header>
+  </a>
 
-  <main>
-    <div class="section-title">Available editors</div>
-    <div class="grid">
-      <!-- XML editor kartı -->
-      <a class="card" href="xml-editor.html">
-        <div class="card-header">
-          <div class="card-title">XML Editor</div>
-          <span class="card-tag">XML / ZIP</span>
+  <div style="display:flex; gap:10px;">
+    <button
+      type="button"
+      class="secondary"
+      onclick="window.location.href='index.html'"
+    >
+      ← Back to tools
+    </button>
+
+    <!-- 🔹 Yeni Sidebar Toggle Butonu -->
+    <button class="secondary" onclick="toggleSidebar()">☰</button>
+  </div>
+</header>
+
+
+
+  <div class="main-layout">
+    <!-- LEFT: mini file tree -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span>Files</span>
+        <span class="sidebar-header-badge" id="fileCountBadge">0</span>
+      </div>
+      <div class="file-tree" id="fileListInner">
+        <!-- File items rendered here -->
+      </div>
+      <div class="sidebar-actions">
+        <button id="renameFileBtn" type="button" class="secondary">Rename</button>
+        <button id="deleteFileBtn" type="button" class="danger">Delete</button>
+      </div>
+    </aside>
+
+    <!-- DRAG HANDLE -->
+    <div class="divider" id="dragHandle"></div>
+
+    <!-- RIGHT: toolbars + editor -->
+    <div class="editor-panel">
+      <!-- First row: file load + zip name + download buttons -->
+      <div class="toolbar">
+        <div class="toolbar-section">
+          <label class="file-input-label">
+            <span>File</span>
+            <input
+              id="fileInput"
+              type="file"
+              accept=".xml,text/xml,application/zip,.zip"
+              title="Select .xml or .zip file"
+            />
+          </label>
         </div>
-        <div class="card-desc">
-  Create, edit and package XML files directly in your browser.
-</div>
-        <div class="card-footer">
-          <button type="button" class="btn">
-            <span>Open XML Editor</span> →
+
+        <div class="toolbar-section grow">
+          <input id="fileName" type="text" placeholder="bundle.zip" value="bundle.zip" />
+        </div>
+
+        <div class="toolbar-section">
+          <button id="downloadBtn">Download ZIP</button>
+          <button id="downloadSingleBtn" type="button" class="secondary">
+            Download selected XML
           </button>
-        </div>
-      </a>
-
-      <!-- Base64 Universal Viewer kartı -->
-      <a class="card" href="base64-universal-viewer.html">
-        <div class="card-header">
-          <div class="card-title">Base64 Universal Viewer</div>
-          <span class="card-tag">Viewer / ZIP / PDF / HTML / Image / XML</span>
-        </div>
-        <div class="card-desc">
-          Paste Base64 or raw HTML and preview content safely — opens HTML, images, XML, PDF, and ZIP files.
-        </div>
-        <div class="card-footer">
-          <button type="button" class="btn">
-            <span>Open Base64 Viewer</span> →
-          </button>
-        </div>
-      </a>
-
-      <!-- İleride eklenecek editörler için placeholder kart -->
-      <div class="card coming">
-        <div class="card-header">
-          <div class="card-title">Coming soon</div>
-          <span class="card-tag">New tool</span>
-        </div>
-        <div class="card-desc">
-          Another in-browser editor or utility. You can plug more tools into this home page later.
-        </div>
-        <div class="card-footer">
-          <button type="button" class="btn">
-            <span>Not ready yet</span>
+          <button id="downloadSingleZipBtn" type="button" class="secondary">
+            Selected → ZIP
           </button>
         </div>
       </div>
-    </div>
-  </main>
 
- <footer>
+      <!-- Second row: XML tools -->
+      <div class="toolbar">
+        <div class="toolbar-section">
+          <button id="validateBtn" type="button" class="secondary">Validate XML</button>
+          <button id="prettyBtn" type="button" class="secondary">Pretty print</button>
+          <button id="toggleFoldBtn" type="button" class="secondary">Toggle fold</button>
+          <button id="addFileBtn" type="button">+ New XML</button>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div id="editorContainer">
+        <textarea id="plainEditor" spellcheck="false"><?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <user id="1" active="true">
+        <name>Welcome!</name>
+			<role>Hope you're having an amazing day ✨</role>
+    </user>
+</root></textarea>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const plainEditor = document.getElementById("plainEditor");
+    const fileNameInput = document.getElementById("fileName");
+    const fileInput = document.getElementById("fileInput");
+    const statusEl = document.getElementById("status");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const downloadSingleBtn = document.getElementById("downloadSingleBtn");
+    const downloadSingleZipBtn = document.getElementById("downloadSingleZipBtn");
+    const toggleFoldBtn = document.getElementById("toggleFoldBtn");
+    const addFileBtn = document.getElementById("addFileBtn");
+    const validateBtn = document.getElementById("validateBtn");
+    const prettyBtn = document.getElementById("prettyBtn");
+    const fileListInner = document.getElementById("fileListInner");
+    const renameFileBtn = document.getElementById("renameFileBtn");
+    const deleteFileBtn = document.getElementById("deleteFileBtn");
+    const fileCountBadge = document.getElementById("fileCountBadge");
+    const sidebar = document.querySelector(".sidebar");
+    const dragHandle = document.getElementById("dragHandle");
+
+    let cmEditor = null;
+
+    let files = [];
+    let currentFileIndex = -1;
+
+    // RESIZABLE SIDEBAR
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+    const MIN_WIDTH = 180;
+    const MAX_WIDTH = 480;
+
+    dragHandle.addEventListener("mousedown", (e) => {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = sidebar.offsetWidth;
+      document.body.style.userSelect = "none";
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isResizing) return;
+      const dx = e.clientX - startX;
+      let newWidth = startWidth + dx;
+      if (newWidth < MIN_WIDTH) newWidth = MIN_WIDTH;
+      if (newWidth > MAX_WIDTH) newWidth = MAX_WIDTH;
+      sidebar.style.width = newWidth + "px";
+      sidebar.style.minWidth = newWidth + "px";
+      sidebar.style.maxWidth = newWidth + "px";
+      if (cmEditor) cmEditor.refresh();
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (!isResizing) return;
+      isResizing = false;
+      document.body.style.userSelect = "";
+      if (cmEditor) setTimeout(() => cmEditor.refresh(), 0);
+    });
+
+    // INIT CodeMirror
+    (function initCodeMirror() {
+      try {
+        if (window.CodeMirror) {
+          cmEditor = CodeMirror.fromTextArea(plainEditor, {
+            mode: "application/xml",
+            theme: "default",
+            lineNumbers: true,
+            lineWrapping: true,
+            tabSize: 2,
+            foldGutter: true,
+            gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+            extraKeys: {
+              "Ctrl-Q": function(cm) {
+                cm.foldCode(cm.getCursor());
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.error("CodeMirror could not start, using plain textarea.", e);
+        cmEditor = null;
+      }
+
+      files = [{
+        name: "document.xml",
+        content: getEditorValue()
+      }];
+      currentFileIndex = 0;
+      renderFileList();
+      setStatus('Ready. Editing "document.xml".', "ok");
+    })();
+
+    function setStatus(msg, type) {
+      statusEl.textContent = msg;
+      statusEl.className = "status" + (type ? " status-" + type : "");
+    }
+
+    function getEditorValue() {
+      return cmEditor ? cmEditor.getValue() : plainEditor.value;
+    }
+
+    function setEditorValue(text) {
+      if (cmEditor) {
+        cmEditor.setValue(text);
+      } else {
+        plainEditor.value = text;
+      }
+    }
+
+    function renderFileList() {
+      fileListInner.innerHTML = "";
+      fileCountBadge.textContent = files.length.toString();
+
+      if (!files || files.length === 0) {
+        const span = document.createElement("div");
+        span.style.fontSize = "0.8rem";
+        span.style.color = "#6b7280";
+        span.textContent = "No XML files loaded yet.";
+        fileListInner.appendChild(span);
+        return;
+      }
+
+    files.forEach((file, idx) => {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "file-pill" + (idx === currentFileIndex ? " active" : "");
+
+  // 🔹 Tooltip’te tam adı göstermek için:
+  btn.setAttribute("data-filename", file.name);
+
+  const left = document.createElement("span");
+  const icon = document.createElement("span");
+  icon.className = "file-pill-icon";
+  icon.textContent = "⟐";
+
+  const nameSpan = document.createElement("span");
+  nameSpan.className = "file-pill-name";
+  nameSpan.textContent = file.name;
+  nameSpan.title = file.name; // Bunu istersen bırak, istersen silebilirsin
+
+  left.appendChild(icon);
+  left.appendChild(nameSpan);
+
+  btn.appendChild(left);
+
+  btn.addEventListener("click", () => {
+    if (currentFileIndex >= 0 && files[currentFileIndex]) {
+      files[currentFileIndex].content = getEditorValue();
+    }
+    currentFileIndex = idx;
+    setEditorValue(files[currentFileIndex].content);
+    setStatus(`Editing "${files[currentFileIndex].name}"`, "ok");
+    renderFileList();
+  });
+
+  fileListInner.appendChild(btn);
+});
+
+    }
+
+    function validateXml(xmlText) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlText, "application/xml");
+      const parsererror = doc.getElementsByTagName("parsererror")[0];
+      if (parsererror) {
+        const msg = (parsererror.textContent || "Invalid XML").split("\n")[0];
+        return { ok: false, message: msg };
+      }
+      return { ok: true };
+    }
+
+    function formatXml(xml) {
+      xml = xml.replace(/\r?\n/g, "");
+      xml = xml.replace(/>(\s*)</g, "><");
+      xml = xml.replace(/></g, ">\n<");
+      const PADDING = "  ";
+      let pad = 0;
+      return xml.split("\n").map(line => {
+        let indent = 0;
+        let trimmed = line.trim();
+
+        if (trimmed.match(/^<\/.+>/)) {
+          pad = Math.max(pad - 1, 0);
+        } else if (trimmed.match(/^<.+[^\/]>.*$/) &&
+                   !trimmed.startsWith("<?") &&
+                   !trimmed.startsWith("<!")) {
+          indent = 1;
+        }
+
+        const result = PADDING.repeat(pad) + trimmed;
+        pad += indent;
+        return result;
+      }).join("\n");
+    }
+
+    downloadBtn.addEventListener("click", async () => {
+      if (currentFileIndex >= 0 && files[currentFileIndex]) {
+        files[currentFileIndex].content = getEditorValue();
+      }
+
+      let zipName = fileNameInput.value.trim() || "bundle.zip";
+      if (!zipName.toLowerCase().endsWith(".zip")) {
+        zipName += ".zip";
+      }
+
+      try {
+        setStatus("Preparing ZIP bundle...", null);
+        const zip = new JSZip();
+
+        if (!files || files.length === 0) {
+          const singleXml = getEditorValue().trim();
+          if (!singleXml) {
+            alert("Cannot download empty XML. Please add some content first.");
+            return;
+          }
+          zip.file("document.xml", singleXml);
+        } else if (files.length === 1) {
+          const singleXml = (files[0].content || "").trim();
+          if (!singleXml) {
+            alert("Cannot download empty XML. Please add some content first.");
+            return;
+          }
+          let innerName = files[0].name || "document.xml";
+          if (!innerName.toLowerCase().endsWith(".xml")) {
+            innerName += ".xml";
+          }
+          zip.file(innerName, singleXml);
+        } else {
+          let added = 0;
+          for (const f of files) {
+            const content = (f.content || "").trim();
+            if (!content) continue;
+            let fname = f.name || `file-${added + 1}.xml`;
+            if (!fname.toLowerCase().endsWith(".xml")) {
+              fname += ".xml";
+            }
+            zip.file(fname, content);
+            added++;
+          }
+          if (added === 0) {
+            alert("All XML files are empty. ZIP will not be created.");
+            setStatus("ZIP creation aborted: all files are empty.", "error");
+            return;
+          }
+        }
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = zipName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        setStatus("ZIP bundle downloaded.", "ok");
+      } catch (err) {
+        console.error(err);
+        setStatus("An error occurred while creating the ZIP.", "error");
+      }
+    });
+
+    downloadSingleBtn.addEventListener("click", () => {
+      if (currentFileIndex >= 0 && files[currentFileIndex]) {
+        files[currentFileIndex].content = getEditorValue();
+      }
+
+      if (currentFileIndex < 0 || !files[currentFileIndex]) {
+        alert("No XML file is selected.");
+        return;
+      }
+
+      const content = (files[currentFileIndex].content || "").trim();
+      if (!content) {
+        alert("Selected XML file is empty.");
+        return;
+      }
+
+      let fname = files[currentFileIndex].name || "document.xml";
+      if (!fname.toLowerCase().endsWith(".xml")) {
+        fname += ".xml";
+      }
+
+      const blob = new Blob([content], { type: "application/xml" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setStatus(`"${fname}" downloaded.`, "ok");
+    });
+
+    downloadSingleZipBtn.addEventListener("click", async () => {
+      if (currentFileIndex >= 0 && files[currentFileIndex]) {
+        files[currentFileIndex].content = getEditorValue();
+      }
+
+      if (currentFileIndex < 0 || !files[currentFileIndex]) {
+        alert("No XML file is selected.");
+        return;
+      }
+
+      const content = (files[currentFileIndex].content || "").trim();
+      if (!content) {
+        alert("Selected XML file is empty.");
+        return;
+      }
+
+      let fname = files[currentFileIndex].name || "document.xml";
+      if (!fname.toLowerCase().endsWith(".xml")) {
+        fname += ".xml";
+      }
+
+      const baseName = fname.replace(/\.xml$/i, "");
+      const zipName = baseName + ".zip";
+
+      try {
+        const zip = new JSZip();
+        zip.file(fname, content);
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = zipName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        setStatus(`ZIP with "${fname}" downloaded.`, "ok");
+      } catch (err) {
+        console.error(err);
+        setStatus("An error occurred while creating the ZIP for selected XML.", "error");
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const name = file.name.toLowerCase();
+
+      if (name.endsWith(".xml")) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const content = reader.result || "";
+          files = [{
+            name: file.name,
+            content
+          }];
+          currentFileIndex = 0;
+          setEditorValue(content);
+          fileNameInput.value = file.name.replace(/\.xml$/i, ".zip");
+          setStatus(`Loaded "${file.name}".`, "ok");
+          renderFileList();
+        };
+        reader.onerror = () => {
+          console.error("Error reading XML file", reader.error);
+          setStatus("Error while reading XML file.", "error");
+        };
+        reader.readAsText(file, "utf-8");
+      } else if (name.endsWith(".zip")) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const arrayBuffer = reader.result;
+            const zip = await JSZip.loadAsync(arrayBuffer);
+
+            const xmlFileNames = Object.keys(zip.files).filter((fname) => {
+              const entry = zip.files[fname];
+              return !entry.dir && fname.toLowerCase().endsWith(".xml");
+            });
+
+            if (xmlFileNames.length === 0) {
+              setStatus("No XML files found inside ZIP.", "error");
+              return;
+            }
+
+            const xmlPromises = xmlFileNames.map((fname) =>
+              zip.file(fname).async("string").then((content) => ({
+                name: fname,
+                content
+              }))
+            );
+
+            files = await Promise.all(xmlPromises);
+            currentFileIndex = 0;
+            setEditorValue(files[0].content);
+            fileNameInput.value = file.name.toLowerCase().endsWith(".zip")
+              ? file.name
+              : file.name + ".zip";
+
+            setStatus(
+              `Loaded ${files.length} XML file(s) from "${file.name}".`,
+              "ok"
+            );
+            renderFileList();
+          } catch (err) {
+            console.error("Error reading ZIP file", err);
+            setStatus("Error while opening ZIP file.", "error");
+          }
+        };
+        reader.onerror = () => {
+          console.error("Error reading ZIP file", reader.error);
+          setStatus("Error while reading ZIP file.", "error");
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        setStatus("Please select a .xml or .zip file.", "error");
+      }
+    });
+
+    toggleFoldBtn.addEventListener("click", () => {
+      if (!cmEditor) {
+        alert("Fold feature works only in CodeMirror mode.");
+        return;
+      }
+      cmEditor.foldCode(cmEditor.getCursor());
+    });
+
+    validateBtn.addEventListener("click", () => {
+      const xmlText = getEditorValue().trim();
+      if (!xmlText) {
+        setStatus("XML is empty. Nothing to validate.", "error");
+        return;
+      }
+
+      const res = validateXml(xmlText);
+      if (res.ok) {
+        setStatus("XML looks valid ✅", "ok");
+      } else {
+        setStatus("XML error: " + res.message, "error");
+      }
+    });
+
+    prettyBtn.addEventListener("click", () => {
+      const xmlText = getEditorValue().trim();
+      if (!xmlText) {
+        setStatus("No content to pretty print.", "error");
+        return;
+      }
+
+      const res = validateXml(xmlText);
+      if (!res.ok) {
+        setStatus("Fix XML errors first: " + res.message, "error");
+        return;
+      }
+
+      try {
+        const formatted = formatXml(xmlText);
+        setEditorValue(formatted);
+        if (currentFileIndex >= 0 && files[currentFileIndex]) {
+          files[currentFileIndex].content = formatted;
+        }
+        setStatus("Pretty print applied.", "ok");
+      } catch (e) {
+        console.error(e);
+        setStatus("Error during pretty print.", "error");
+      }
+    });
+
+    addFileBtn.addEventListener("click", () => {
+      const suggested = `new_${files.length + 1}.xml`;
+      const newName = prompt("New XML file name:", suggested);
+      if (!newName) return;
+
+      let fileName = newName.trim();
+      if (!fileName.toLowerCase().endsWith(".xml")) {
+        fileName += ".xml";
+      }
+
+      const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>\n<root>\n\n</root>`;
+
+      if (currentFileIndex >= 0 && files[currentFileIndex]) {
+        files[currentFileIndex].content = getEditorValue();
+      }
+
+      files.push({
+        name: fileName,
+        content: defaultXml
+      });
+
+      currentFileIndex = files.length - 1;
+      setEditorValue(defaultXml);
+
+      setStatus(`Added "${fileName}".`, "ok");
+      renderFileList();
+    });
+
+    renameFileBtn.addEventListener("click", () => {
+      if (currentFileIndex < 0 || !files[currentFileIndex]) {
+        alert("No XML file is selected to rename.");
+        return;
+      }
+
+      const currentName = files[currentFileIndex].name || "document.xml";
+      const newName = prompt("New name for selected XML file:", currentName);
+      if (!newName) return;
+
+      let trimmed = newName.trim();
+      if (!trimmed.toLowerCase().endsWith(".xml")) {
+        trimmed += ".xml";
+      }
+
+      files[currentFileIndex].name = trimmed;
+      setStatus(`Renamed file to "${trimmed}".`, "ok");
+      renderFileList();
+    });
+
+    deleteFileBtn.addEventListener("click", () => {
+      if (currentFileIndex < 0 || !files[currentFileIndex]) {
+        alert("No XML file is selected to delete.");
+        return;
+      }
+
+      const name = files[currentFileIndex].name || "document.xml";
+      const confirmDelete = confirm(`Delete "${name}"? This cannot be undone.`);
+      if (!confirmDelete) return;
+
+      files.splice(currentFileIndex, 1);
+
+      if (files.length === 0) {
+        currentFileIndex = -1;
+        setEditorValue("");
+        setStatus("All files deleted. Editor is now empty.", "ok");
+        renderFileList();
+        return;
+      }
+
+      currentFileIndex = Math.min(currentFileIndex, files.length - 1);
+      setEditorValue(files[currentFileIndex].content);
+      setStatus(`Deleted "${name}". Now editing "${files[currentFileIndex].name}".`, "ok");
+      renderFileList();
+    });
+	function toggleSidebar() {
+  document.querySelector(".sidebar").classList.toggle("collapsed");
+}
+
+  </script>
+  
+   <footer>
   © 2025 Aylaverse — Browser-based developer tools.
 </footer>
-
-
 </body>
 </html>
