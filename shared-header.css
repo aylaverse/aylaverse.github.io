@@ -1,0 +1,52 @@
+/* Shared header, logo and footer styles for Aylaverse tools */
+header {
+  margin: 0 0 16px 0;
+  max-width: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 20px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-link { text-decoration: none; color: inherit; display:flex; align-items:center; gap:10px; }
+
+.logo-icon {
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  font-size: 1.6rem;
+  user-select: none;
+}
+
+.logo-text-main, .logo-text-main * { font-weight: 700; font-size: 1.25rem; }
+.logo-text-sub, .logo-text-sub * { font-size: 0.9rem; color: #4b5563; opacity: 0.9; }
+
+.logo-text-main { line-height: 1; }
+
+/* Footer common */
+footer {
+  max-width: 960px;
+  margin: 24px auto 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-align: right;
+  padding: 0 12px;
+}
+
+/* Small helper for buttons in cards */
+.btn svg { width:16px; height:16px; display:inline-block; vertical-align:middle; fill:currentColor; margin-right:8px; }
+
+@media (max-width: 640px) {
+  header { padding: 0 8px; }
+  .logo-text-main { font-size: 1.1rem; }
+}
