@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dev Tools – Home</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <title>Aylaverse Tools</title>
+  <meta name="description" content="Aylaverse Tools – browser-based XML and developer utilities you can run directly in your browser." />
+
+<meta property="og:title" content="Aylaverse Tools" />
+<meta property="og:description" content="Edit XML files, load them from ZIP and build more browser-based tools under one hub." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://aylaverse.github.io" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -88,7 +96,8 @@
       text-decoration: none;
       color: inherit;
       transition: transform 0.08s ease, box-shadow 0.08s ease;
-    }
+	  transition: transform 0.15s ease, box-shadow 0.15s ease;
+	  }
 
     .card:hover {
       transform: translateY(-2px);
@@ -136,7 +145,7 @@
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      background: linear-gradient(135deg, #4f46e5, #22c55e);
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
       color: #ffffff;
       box-shadow: 0 8px 22px rgba(56, 189, 248, 0.25);
     }
@@ -180,10 +189,10 @@
     <div class="logo">
       <div class="logo-icon">&lt;/&gt;</div>
       <div>
-        <div class="logo-text-main">Dev Tools Hub</div>
-        <div class="logo-text-sub">
-          A small collection of in-browser editors & utilities.
-        </div>
+        <div class="logo-text-main">Aylaverse Tools</div>
+<div class="logo-text-sub">
+  Smart in-browser tools for developers & creators.
+</div>
       </div>
     </div>
   </header>
@@ -194,15 +203,15 @@
       <!-- XML editor kartı -->
       <a class="card" href="xml-editor.html">
         <div class="card-header">
-          <div class="card-title">XML Zip Studio</div>
+          <div class="card-title">XML Editor</div>
           <span class="card-tag">XML / ZIP</span>
         </div>
         <div class="card-desc">
-          Edit one or more XML files, load them from a ZIP archive and download everything back as a ZIP bundle.
-        </div>
+  Create, edit and package XML files directly in your browser.
+</div>
         <div class="card-footer">
           <button type="button" class="btn">
-            <span>Open editor</span> →
+            <span>Open XML Editor</span> →
           </button>
         </div>
       </a>
@@ -226,7 +235,8 @@
   </main>
 
   <footer>
-    You can add more tools here later by creating new HTML files and adding cards that link to them.
-  </footer>
+  © 2025 Aylaverse · Browser-based tools for developers.
+</footer>
+
 </body>
 </html>
