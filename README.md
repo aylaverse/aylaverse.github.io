@@ -13,6 +13,7 @@ no installs, no setup, everything runs right in your browser.
 | Tool | Description | Link |
 |------|-------------|------|
 | **XML Editor** | Create, load, edit and package multiple XML files. ZIP import and export supported. | https://aylaverse.github.io/xml-editor.html |
+| **Base64 Universal Viewer** | Paste Base64 or raw HTML and preview images, PDFs, ZIP contents, or download decoded files directly in the browser. | https://aylaverse.github.io/base64-universal-viewer.html |
 
 More tools on the way... ⚙️
 
